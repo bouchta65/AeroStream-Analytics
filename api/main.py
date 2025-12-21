@@ -31,3 +31,17 @@ def generate_tweet() -> dict:
         "text": text
     }
 
+@app.post("/batch")
+def get_microbatch(batch_size: int = 10):
+    batch_size = min(max(batch_size, 1), 100)
+    tweets = [generate_tweet() for _ in range(batch_size)]
+    return process_tweets_pipeline(tweets)
+
+
+@app.get("/tweets")
+def read_tweets(limit: int = 50):
+    tweets = get_tweets(limit)
+    return {
+        "total": len(tweets),
+        "tweets": tweets
+    }
