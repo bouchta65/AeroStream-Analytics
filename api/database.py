@@ -38,3 +38,24 @@ def save_tweet(tweet):
         })
         conn.commit()
 
+
+def get_tweets(limit=100):
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("SELECT * FROM tweets ORDER BY created_at DESC LIMIT :limit"),
+            {"limit": limit}
+        )
+
+        tweets = []
+        for row in result:
+            tweets.append({
+                "id": row[0],
+                "sentiment": row[1],
+                "confidence": row[2],
+                "airline": row[3],
+                "negativereason": row[4],
+                "created_at": row[5],
+                "text": row[6],
+            })
+
+        return tweets
