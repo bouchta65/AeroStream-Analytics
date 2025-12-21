@@ -21,3 +21,20 @@ def init_db():
         """))
         conn.commit()
 
+
+def save_tweet(tweet):
+    with engine.connect() as conn:
+        conn.execute(text("""
+            INSERT INTO tweets
+            (sentiment, confidence, airline, negativereason, created_at, text)
+            VALUES (:sentiment, :confidence, :airline, :negativereason, :created_at, :text)
+        """), {
+            "sentiment": tweet["airline_sentiment"],
+            "confidence": tweet["airline_sentiment_confidence"],
+            "airline": tweet["airline"],
+            "negativereason": tweet.get("negativereason"),
+            "created_at": datetime.fromisoformat(tweet["tweet_created"]),
+            "text": tweet["text"]
+        })
+        conn.commit()
+
