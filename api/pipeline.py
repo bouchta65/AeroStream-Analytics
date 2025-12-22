@@ -4,9 +4,7 @@ from datetime import datetime
 
 
 def process_tweets_pipeline(tweets):
-    texts = []
-    for tweet in tweets:
-        texts.append(tweet.get("text", ""))
+    texts = [tweet.get("text", "") for tweet in tweets]
 
     results = predict_sentiment(texts)
 
@@ -27,5 +25,3 @@ def process_tweets_pipeline(tweets):
         "status": "success",
         "processed": len(tweets)
     }
-
-
