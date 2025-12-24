@@ -1,0 +1,76 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: aerostream-postgres
+    environment:
+      POSTGRES_DB: aerostream
+      POSTGRES_USER: aerostream
+      POSTGRES_PASSWORD: aerostream
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  ml-jupyter:
+    build:
+      context: .
+      dockerfile: ml/Dockerfile
+    container_name: aerostream-ml
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./ml/batch:/app/notebooks
+      - ./ml/data:/app/data
+    depends_on:
+      - postgres
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: aerostream-api
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql://aerostream:aerostream@postgres:5432/aerostream
+    depends_on:
+      - postgres
+      - ml-jupyter
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    container_name: aerostream-dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      DATABASE_URL: postgresql://aerostream:aerostream@postgres:5432/aerostream
+    depends_on:
+      - postgres
+
+  airflow:
+    image: apache/airflow:2.7.3
+    container_name: aerostream-airflow
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://aerostream:aerostream@postgres:5432/aerostream
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+    ports:
+      - "8080:8080"
+    command: standalone
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  ml_models:
+  chromadb_data:
+  airflow_logs:
